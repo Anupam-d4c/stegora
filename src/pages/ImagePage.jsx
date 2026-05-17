@@ -1,7 +1,7 @@
 import { useRef, useState } from "react"
 import { Link } from "react-router-dom"
 import { ArrowLeft, Upload, Download } from "lucide-react"
-
+import toast from "react-hot-toast"
 import { encodeImage, decodeImage } from "../utils/imageStego.js"
 
 function ImagePage() {
@@ -62,6 +62,7 @@ function ImagePage() {
         ctx.drawImage(img, 0, 0)
 
         setImageLoaded(true)
+        toast.success("PNG loaded")
       }
 
       img.onerror = () => {
@@ -88,6 +89,7 @@ function ImagePage() {
       encodeImage(canvas, message)
 
       setDecoded("Message hidden successfully.")
+      toast.success("Image encoded")
       setIsEncoded(true)
     } catch (err) {
       setIsEncoded(false)
@@ -103,6 +105,7 @@ function ImagePage() {
       const result = decodeImage(canvas)
 
       setDecoded(result)
+      toast.success("Hidden message extracted")
     } catch (err) {
       setError(err.message)
     }
