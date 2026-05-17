@@ -8,6 +8,8 @@ import {
   Upload
 } from "lucide-react"
 
+import toast from "react-hot-toast"
+
 import {
   generateQRCode,
   decodeQRCode
@@ -17,13 +19,20 @@ function QRPage() {
 
   const canvasRef = useRef(null)
 
-  const [text, setText] = useState("")
+  const [text, setText] =
+    useState("")
 
-  const [qrImage, setQrImage] = useState("")
+  const [qrImage, setQrImage] =
+    useState("")
 
-  const [decoded, setDecoded] = useState("")
+  const [decoded, setDecoded] =
+    useState("")
 
-  const [error, setError] = useState("")
+  const [error, setError] =
+    useState("")
+
+  const [dragging, setDragging] =
+    useState(false)
 
   async function handleGenerate() {
 
@@ -38,17 +47,18 @@ function QRPage() {
 
       setDecoded("")
 
+      toast.success(
+        "QR generated"
+      )
     }
+
     catch (err) {
 
       setError(err.message)
     }
   }
 
-  function handleUpload(event) {
-
-    const file =
-      event.target.files[0]
+  function processFile(file) {
 
     if (!file) return
 
@@ -73,6 +83,13 @@ function QRPage() {
         canvas.width = img.width
         canvas.height = img.height
 
+        ctx.clearRect(
+          0,
+          0,
+          canvas.width,
+          canvas.height
+        )
+
         ctx.drawImage(img, 0, 0)
 
         try {
@@ -82,7 +99,11 @@ function QRPage() {
 
           setDecoded(result)
 
+          toast.success(
+            "QR decoded"
+          )
         }
+
         catch (err) {
 
           setError(err.message)
@@ -95,6 +116,40 @@ function QRPage() {
     reader.readAsDataURL(file)
   }
 
+  function handleUpload(event) {
+
+    const file =
+      event.target.files[0]
+
+    processFile(file)
+
+    event.target.value = ""
+  }
+
+  function handleDrop(event) {
+
+    event.preventDefault()
+
+    setDragging(false)
+
+    const file =
+      event.dataTransfer.files[0]
+
+    processFile(file)
+  }
+
+  function handleDragOver(event) {
+
+    event.preventDefault()
+
+    setDragging(true)
+  }
+
+  function handleDragLeave() {
+
+    setDragging(false)
+  }
+
   function downloadQR() {
 
     if (!qrImage) return
@@ -102,11 +157,16 @@ function QRPage() {
     const link =
       document.createElement("a")
 
-    link.download = "stegora-qr.png"
+    link.download =
+      "stegora-qr.png"
 
     link.href = qrImage
 
     link.click()
+
+    toast.success(
+      "QR downloaded"
+    )
   }
 
   return (
@@ -173,7 +233,8 @@ function QRPage() {
             text-zinc-400
             max-w-2xl
           ">
-            Generate and decode QR codes directly in your browser.
+            Generate and decode QR
+            codes directly in your browser.
           </p>
 
           <div className="
@@ -185,7 +246,9 @@ function QRPage() {
               rows={5}
               value={text}
               onChange={(e) =>
-                setText(e.target.value)
+                setText(
+                  e.target.value
+                )
               }
               placeholder="
 Type text to generate QR...
@@ -247,35 +310,49 @@ Type text to generate QR...
                 Download QR
               </button>
 
-              <label className="
-                inline-flex
-                items-center
-                gap-2
-                px-5
-                py-3
-                border
-                border-zinc-700
-                text-zinc-300
-                hover:border-green-500
-                hover:text-green-400
-                cursor-pointer
-                transition-colors
-              ">
-
-                <Upload size={16} />
-
-                Upload QR
-
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleUpload}
-                  className="hidden"
-                />
-
-              </label>
-
             </div>
+
+            <label
+              onDrop={handleDrop}
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              className={`
+                border
+                border-dashed
+                transition-colors
+                p-10
+                flex
+                flex-col
+                items-center
+                justify-center
+                cursor-pointer
+
+                ${
+                  dragging
+                    ? "border-green-500 bg-green-500/5"
+                    : "border-zinc-700 hover:border-green-500"
+                }
+              `}
+            >
+
+              <Upload
+                size={30}
+                className="mb-4"
+              />
+
+              <span className="text-zinc-400">
+                Drag & drop QR image
+                or click to upload
+              </span>
+
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleUpload}
+                className="hidden"
+              />
+
+            </label>
 
             {qrImage && (
 
